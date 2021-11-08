@@ -1,6 +1,7 @@
 package com.springboot.start.common;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,9 +15,8 @@ import java.util.ResourceBundle;
  * @Author:shiquan
  * @Date:2019/3/18 17:36
  **/
+@Slf4j
 public class PropertiesUtil {
-    private static Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
-
     /**
      * 通过属性key获取配置文件的属性值
      *
@@ -26,23 +26,23 @@ public class PropertiesUtil {
      */
     public static String getDataFromPropertiseFile(String fileName, String key) {
         if (isEmpty(fileName)) {
-            logger.info("getDataFromPropertiseFile fileName is null");
+            log.info("getDataFromPropertiseFile fileName is null");
             return null;
         }
         if (isEmpty(key)) {
-            logger.info("getDataFromPropertiseFile key is null");
+            log.info("getDataFromPropertiseFile key is null");
             return null;
         }
         try {
 
             ResourceBundle resource = ResourceBundle.getBundle("properties/" + fileName);
             if (resource == null) {
-                logger.error(fileName + "配置文件不存在");
+                log.error(fileName + "配置文件不存在");
                 return null;
             }
             return resource.getString(key);
         } catch (Exception e) {
-            logger.error(fileName + "配置文件获取参数异常,key=" + key);
+            log.error(fileName + "配置文件获取参数异常,key=" + key);
             return null;
         }
     }
@@ -54,22 +54,22 @@ public class PropertiesUtil {
      */
     public static String[] getPropertyStringArray(String fileName, String key) {
         if (isEmpty(fileName)) {
-            logger.info("getDataFromPropertiseFile fileName is null");
+            log.info("getDataFromPropertiseFile fileName is null");
             return null;
         }
         if (isEmpty(key)) {
-            logger.info("getDataFromPropertiseFile key is null");
+            log.info("getDataFromPropertiseFile key is null");
             return null;
         }
         try {
             ResourceBundle resource = ResourceBundle.getBundle("properties/" + fileName);
             if (resource == null) {
-                logger.error(fileName + "配置文件不存在");
+                log.error(fileName + "配置文件不存在");
                 return null;
             }
             return getStringArray(resource, key);
         } catch (Exception e) {
-            logger.error(fileName + "配置文件获取参数异常,key=" + key);
+            log.error(fileName + "配置文件获取参数异常,key=" + key);
             return null;
         }
     }
