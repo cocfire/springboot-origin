@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="zh-cn" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--
+    公共文件---引入方法：
+    th:insert  ：保留自己的主标签，保留th:fragment的主标签。
+    th:replace ：不要自己的主标签，保留th:fragment的主标签。
+    th:include ：保留自己的主标签，不要th:fragment的主标签。（官方3.0后不推荐）
+    写法<div th:replace="commons::common_header"></div>
+-->
+<!--
+    静态资源---引入方法：
+    资源属性前加th: (如：<link th:href="@{/static/css/bootstrap.min.css}" rel="stylesheet"/>
+    资源路径说明：
+    必须以@{}包裹，例：@{/static}为绝对路径，访问时不会添加前缀；
+    @{static}为相对路径；访问时会添加当前servlet路径前缀
+-->
+<!-- 公共头部文件 -->
+<head th:fragment="common_header">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link th:href="@{/static/icon/NETWORK_LAN.png}" rel="shortcut icon"/><!-- 自定义页签图标 -->
+
+    <title>设备中间层平台</title>
+
+    <!-- Bootstrap core CSS -->
+    <link th:href="@{/static/css/bootstrap.min.css}" rel="stylesheet"/>
+    <!-- Bootstrap theme -->
+    <link th:href="@{/static/css/bootstrap-theme.min.css}" rel="stylesheet"/>
+    <!-- Bootstrap theme -->
+    <link th:href="@{/static/css/common.css}" rel="stylesheet"/>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="http://v3.bootcss.com/assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet"/>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <script src="http://v3.bootcss.com/assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="http://cdn.bootcss.com/html5shiv/3.7.0/html5shiv.min.js"></script>
+    <script src="http://cdn.bootcss.com/respond.js/1.3.0/respond.min.js"></script>
+    <script th:src="@{/static/js/jquery.min.js}"></script>
+    <script th:src="@{/static/js/jquery.cookie.js}"></script>
+    <script th:src="@{/static/js/bootstrap.min.js}"></script>
+    <script th:src="@{/static/js/jquery.form.js}"></script>
+    <script th:src="@{/static/js/jquery.enplaceholder.js}"></script>
+</head>
+<body>
+<!-- 导航栏模块 begin  -->
+<nav th:fragment="common_nav" class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" style="color: skyblue"><b>设备中间层平台</b></a>
+        </div>
+        <!--suppress ALL--><!-- 该注解决EL表达式报错——关闭检测下一行表达式 -->
+        <input id="currentUserId" type="hidden" th:value="${currentUserId}">
+        <!--suppress ALL--><!-- 该注解决EL表达式报错——关闭检测下一行表达式 -->
+        <input id="userPermission" type="hidden" th:value="${userPermission}">
+        <div id="navbar" class="navbar-collapse collapse">
+            <!-- 独立式菜单按钮 -->
+            <ul class="nav navbar-nav">
+                <!--<li id="begin"><a href="/DMIL/begin">使用指南</a></li>-->
+                <li id="device" hidden></li>
+                <li id="param" hidden></li>
+                <li id="software" hidden></li>
+                <li id="file" hidden></li>
+                <li id="user" hidden></li>
+                <li id="syslog" hidden></li>
+                <li id="config" hidden></li>
+                <li id="otherdevice" hidden></li>
+            </ul>
+            <!-- 下拉式菜单按钮 -->
+            <ul class="nav navbar-nav navbar-right">
+                <li id="userOption" class="dropdown">
+                    <!-- 菜单按钮显示内容 -->
+                    <a id="openOption" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <b style="color: lightgrey">用户名：</b> <span style="color: greenyellow">[[${currentUserName}]]</span>
+                        <span class="caret"></span>
+                    </a>
+                    <!-- 菜单选项显示内容 -->
+                    <ul class="dropdown-menu" aria-labelledby="openOption">
+                        <li><a class="glyphicon glyphicon-lock" href="javascript:void(0);" onclick="openChangePwdModal()">修改密码</a></li>
+                        <li><a class="glyphicon glyphicon-off" href="/DMIL/dologout">安全退出</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <div id="version" style="color:#aaaaaa; position:absolute; width:150px; right:0; padding-top:5px;">
+                version:<span id="sys_version"></span>
+                <br/>
+                build-<span id="sys_update"></span>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            /** --- 加载版本信息 ---*/
+            getSysVersion();
+
+            /** ---- 导航栏选中状态 ---- */
+            var currenthref = location.href;
+            if (currenthref.indexOf("begin") > 0) {
+                //$("#begin").addClass("active");
+            } else if (currenthref.indexOf("/device/list") > 0) {
+                $("#device").addClass("active");
+            } else if (currenthref.indexOf("/param/list") > 0) {
+                $("#param").addClass("active");
+            } else if (currenthref.indexOf("/software/list") > 0) {
+                $("#software").addClass("active");
+            } else if (currenthref.indexOf("/file/list") > 0) {
+                $("#file").addClass("active");
+            } else if (currenthref.indexOf("/user/list") > 0) {
+                $("#user").addClass("active");
+            } else if (currenthref.indexOf("/syslog/list") > 0) {
+                $("#syslog").addClass("active");
+            } else if (currenthref.indexOf("/otherdevice/list") > 0) {
+                $("#otherdevice").addClass("active");
+            } else if (currenthref.indexOf("/config/list") > 0) {
+                $("#config").addClass("active");
+            } else {
+                $("#device").addClass("active");
+            }
+
+            //权限显示管理(目前只控制到页面)，管理员显示所有页面
+            if ($("#currentUserId").val() != "888") {
+                loadMenu($("#userPermission").val());
+            } else {
+                loadMenu("1,2,3,4,5,7");
+            }
+
+        });
+
+        /** ---- 菜单加载方法 ---- */
+        function loadMenu(str) {
+            var list = str.split(',');
+            $.each(list , function (index, value) {
+                if (value == '1') {
+                    var device = '<a href="/DMIL/device/list"><b>设备管理</b></a>';
+                    $("#device").html(device);
+                    $("#device").show();
+                }
+                if (value == '2') {
+                    var software = '<a href="/DMIL/software/list"><b>软件管理</b></a>';
+                    $("#software").html(software);
+                    $("#software").show();
+                }
+                if (value == '3') {
+                    var file = '<a href="/DMIL/file/list"><b>信息发布</b></a>';
+                    $("#file").html(file);
+                    $("#file").show();
+                }
+                if (value == '4') {
+                    var user = '<a href="/DMIL/user/list"><b>用户管理</b></a>';
+                    $("#user").html(user);
+                    $("#user").show();
+                }
+                if (value == '5') {
+                    var syslog = '<a href="/DMIL/syslog/list"><b>系统日志</b></a>';
+                    $("#syslog").html(syslog);
+                    $("#syslog").show();
+                }
+                if (value == '6') {
+                    var otherdevice = '<a href="/DMIL/otherdevice/list"><b>设备发现</b></a>';
+                    $("#otherdevice").html(otherdevice);
+                    $("#otherdevice").show();
+                }
+                if (value == '7') {
+                    var param = '<a href="/DMIL/param/list"><b>设备控制</b></a>';
+                    $("#param").html(param);
+                    $("#param").show();
+                }
+                if (value == '8') {
+                    var config = '<a href="/DMIL/config/list"><b>系统配置</b></a>';
+                    $("#config").html(config);
+                    $("#config").show();
+                }
+            })
+        }
+    </script>
+</nav>
+<!-- 导航栏模块 end -->
+
+<!-- 修改密码模块 begin -->
+<div th:fragment="common_pwdmodal" class="modal fade" id="changepwdmodal" tabindex="-1" role="dialog"
+     aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">修改密码</h4>
+            </div>
+            <div class="modal-body">
+                <form id="pwdForm" name="pwdForm" class="form-horizontal" role="form" method="post"
+                      enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="oldPwd" class="col-sm-3 control-label">旧密码</label>
+                        <div class="col-sm-5">
+                            <input type="password" class="form-control" id="oldPwd" name="oldPwd" placeholder="旧密码"
+                                   value="">
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="form-group">
+                        <label for="newPwd" class="col-sm-3 control-label">新密码</label>
+                        <div class="col-sm-5">
+                            <input type="password" class="form-control" id="newPwd" name="newPwd" placeholder="新密码"
+                                   value="">
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="form-group">
+                        <label for="newPwdConfirm" class="col-sm-3 control-label">确认密码</label>
+                        <div class="col-sm-5">
+                            <input type="password" class="form-control" id="newPwdConfirm" name="newPwdConfirm"
+                                   placeholder="确认密码" value="">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="savebtn" type="button" class="btn btn-primary" onclick="newpwdsave()">保存</button>
+                <button id="cancelbtn" type="button" class="btn btn-default" onclick="hidePwdModal()">取消</button>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        /* 修改密码相关方法 */
+        function openChangePwdModal() {
+            $("#oldPwd").val("");
+            $("#newPwd").val("");
+            $("#newPwdConfirm").val("");
+            $("#changepwdmodal").modal('show');
+        }
+
+        function hidePwdModal() {
+            $("#changepwdmodal").modal('hide');
+        }
+
+        function newpwdsave() {
+            var oldPwd = $("#oldPwd").val();
+            var newPwd = $("#newPwd").val();
+            var newPwdConfirm = $("#newPwdConfirm").val();
+            if (oldPwd == '') {
+                alert("请填写旧密码！");
+                $("#oldPwd").focus();
+                return;
+            }
+            if (newPwd == '') {
+                alert("请填写新密码！");
+                $("#newPwd").focus();
+                return;
+            }
+            if (newPwdConfirm != newPwd) {
+                alert("确认密码与新密码不一致！");
+                $("#newPwdConfirm").focus();
+                return;
+            }
+            if (oldPwd == newPwd) {
+                alert("新密码不能与旧密码相同！");
+                $("#newPwdConfirm").focus();
+                return;
+            }
+            if (newPwd.length < 6) {
+                alert("新密码不能少于6位！");
+                $("#newPwd").focus();
+                return;
+            }
+
+            var data = {};
+            data.oldPwd = oldPwd;
+            data.newPwd = newPwd;
+            data.newPwdConfirm = newPwdConfirm;
+            $.ajax({
+                type: "POST"
+                , url: "/DMIL/changepwd"
+                , data: data
+                , contentType: "application/x-www-form-urlencoded;charset=utf-8;"
+                , dataType: "json"
+                , cache: false
+                , success: function (data) {
+                    if (data.obj1 == 'success') {
+                        alert("修改成功：请重新登录!");
+                        //修改成功跳转登录页
+                        location.href = "/DMIL/login";
+                    } else {
+                        alert(data.obj1);
+                    }
+                }
+                , error: function (XMLHttpRequest, textStatus, errorThrown) {
+                    //alert(XMLHttpRequest.status + textStatus);
+                }
+            });
+        }
+    </script>
+</div>
+<!-- 修改密码模块 end -->
+
+<!-- 翻页组件-表单 start -->
+<div th:fragment="common_paginater" class="panel panel-footer" style="width:95%; position:absolute; bottom:0px;padding-bottom:3px; margin-bottom:0%">
+    <div class="btn-group" style="padding-top: 0px; padding-bottom: 4px"><!--suppress ALL-->
+        <select id="pageSize" name="pageSize" class="form-control" th:value="${pageSize}"><!--suppress ALL-->
+            <option value="10" th:selected="${pageSize == 10?'selected':'false'}">10</option><!--suppress ALL-->
+            <option value="50" th:selected="${pageSize == 50?'selected':'false'}">50</option><!--suppress ALL-->
+            <option value="100" th:selected="${pageSize == 100?'selected':'false'}">100</option><!--suppress ALL-->
+            <option value="500" th:selected="${pageSize == 500?'selected':'false'}">500</option><!--suppress ALL-->
+            <!--<option value="1000" th:selected="${pageSize == 1000?'selected':'false'}">1000</option>&lt;!&ndash;suppress ALL&ndash;&gt;
+            <option value="5000" th:selected="${pageSize == 5000?'selected':'false'}">5000</option>&lt;!&ndash;suppress ALL&ndash;&gt;-->
+        </select>
+    </div>
+    <div class="btn-group">
+        <div class="btn-group">
+            <!--suppress ALL--><!-- 该注解决EL表达式报错——关闭检测下一行表达式 -->
+            <ul class="pagination" style="margin-bottom: 0px; margin-top: 0px;">
+                <!-- 首页 --><!--suppress ALL-->
+                <li th:class="${maxPage == 1 || page == 1?'disabled':''}"><!--suppress ALL-->
+                    <a href="javascript:void(0);" th:onclick="|gotopage(1, ${page}, ${maxPage})|">首页</a>
+                </li>
+                <!-- 上一页 --><!--suppress ALL-->
+                <li th:class="${page == 1?'disabled':''}"><!--suppress ALL-->
+                    <a href="javascript:void(0);" th:onclick="|gotopage(${page - 1}, ${page}, ${maxPage})|">&laquo;</a>
+                </li>
+
+                <!-- 5页以内，显示全部页码 --><!--suppress ALL-->
+                <li th:if="${maxPage <= 5}" th:each="count:${#numbers.sequence(1, maxPage)}" th:class="${count == page?'active':''}"><!--suppress ALL-->
+                    <a href="javascript:void(0);" th:onclick="|gotopage(${count}, ${page}, ${maxPage})|" th:text="${count}"></a>
+                </li>
+
+                <!-- 大于5页 只显示左右两页、首页、尾页--><!--suppress ALL-->
+                <li th:if="${maxPage > 5 && page >3}">
+                    <span class="dot">...</span>
+                </li><!--suppress ALL-->
+                <li th:if="${maxPage > 5 }" th:each="count:${#numbers.sequence(1, maxPage)}" th:class="${count == page?'active':''}"><!--suppress ALL-->
+                    <a th:if="${page <= 3 && count - page > 2 && count <= 6}" href="javascript:void(0);" th:onclick="|gotopage(${count}, ${page}, ${maxPage})|" th:text="${count}"></a><!--suppress ALL-->
+                    <a th:if="${-2 <= count - page && count - page <= 2}" href="javascript:void(0);" th:onclick="|gotopage(${count}, ${page}, ${maxPage})|" th:text="${count}"></a><!--suppress ALL-->
+                    <a th:if="${maxPage - page <= 2 && page - count > 2 && maxPage - count <= 5}" href="javascript:void(0);" th:onclick="|gotopage(${count}, ${page}, ${maxPage})|" th:text="${count}"></a>
+                </li><!--suppress ALL-->
+                <li th:if="${maxPage > 5 && maxPage - page >2}">
+                    <span class="dot">...</span>
+                </li>
+
+                <!-- 下一页 --><!--suppress ALL-->
+                <li th:class="${page == maxPage?'disabled':''}"><!--suppress ALL-->
+                    <a href="javascript:void(0);" th:onclick="|gotopage(${page + 1}, ${page}, ${maxPage})|">&raquo;</a>
+                </li>
+                <!-- 末页 --><!--suppress ALL-->
+                <li th:class="${maxPage == 1 || page == maxPage?'disabled':''}"><!--suppress ALL-->
+                    <a href="javascript:void(0);" th:onclick="|gotopage(${maxPage}, ${page}, ${maxPage})|">末页</a>
+                </li>
+            </ul>
+        </div>
+        <div class="btn-group">
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;第&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group input-group-sm">
+                <input id="page" name="page" type="text" class="form-control" style="width: 40px;" oninput = "value=value.replace(/[^\d]/g,'')">
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;页&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group">
+                <button type="button" class="btn-sm btn-primary" onclick="topage()">确定</button>
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;共[[${maxPage}]]页，[[${columns}]]条记录&nbsp;&nbsp;</h5>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        //页面容量监听
+        $("#pageSize").change(function(){
+            //获取跳转url，修改pageSize，重置page为1
+            var orginurl = location.href;
+            orginurl = resetUrl(orginurl, "pageSize", $("#pageSize").val());
+            location.href = resetUrl(orginurl, "page", 1);
+        });
+
+        /* 指定页面跳转方法 */
+        function topage() {
+            var page = $("#page").val();
+            gotopage(page, [[${page}]], [[${maxPage}]]);
+        }
+        /* 翻页跳转方法 */
+        function gotopage(pageIndex, currentPage, maxPage) {
+            //不跳转的情况：翻页不合法
+            if (pageIndex == undefined || pageIndex == null || pageIndex == "" || pageIndex == currentPage
+                || !isNumber(pageIndex) || pageIndex < 1 || pageIndex > maxPage || maxPage == 1) {
+                return;
+            }
+
+            //获取跳转url并执行跳转
+            var orginurl = location.href;
+            location.href = resetUrl(orginurl, "page", pageIndex);
+        }
+
+        /* 修改url中指定参数的值，若不存在该参数则添加参数 */
+        function resetUrl(url, key, value) {
+            //处理后的url
+            var handledurl = "";
+
+            //判断url是否含参数，若不含参直接添加参数
+            var locat = url.indexOf("?");
+            if (locat == -1) {
+                return url +"?"+ key +"="+ value;
+            }
+
+            //含参url解析
+            handledurl = url.substr(0, locat);//去掉参数的url
+            var paramstr = url.substr(locat + 1);//截取参数串
+            var paramArray = paramstr.split("&"); //各个参数放到数组里
+
+            //含参标志
+            var haskey = false;
+
+            //循环拼接参数，若找到需求参数则修改
+            for (var i = 0; i < paramArray.length; i++) {
+                locat = paramArray[i].indexOf("=");
+                var name = paramArray[i].substr(0, locat);//截取参数名
+                var val = "";
+                if (name == key) {
+                    val = value;
+                    haskey = true;
+                } else {
+                    val = paramArray[i].substr(locat + 1);
+                }
+                //从新组装参数
+                var param = "";
+                if (i == 0) {
+                    param = "?" + name + "=" + val;
+                } else {
+                    param = "&" + name + "=" + val;
+                }
+                handledurl = handledurl + param;
+            }
+
+            //若不包含该参数则在尾部添加
+            if (!haskey) {
+                handledurl = handledurl + "&" + key + "=" + value;
+            }
+
+            return handledurl;
+        }
+    </script>
+</div>
+<!-- 翻页组件-表单 end -->
+
+<!-- 翻页组件A-ajax start -->
+<div th:fragment="paginater_A" class="panel panel-footer" style="width:96%; position:absolute; bottom:0px;padding-bottom:3px; margin-bottom:0%">
+    <div class="btn-group" style="padding-top: 0px; padding-bottom: 4px">
+        <select id="pageSize_A" name="pageSize_A" class="form-control" value="10">
+            <option value="10">10</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+    <div class="btn-group">
+        <div class="btn-group">
+            <ul id="pagefootA" class="pagination" style="margin-bottom: 0px; margin-top: 0px;"/>
+        </div>
+        <div class="btn-group">
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;第&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group input-group-sm">
+                <input id="page_A" name="page_A" type="text" class="form-control" style="width: 40px;" oninput = "value=value.replace(/[^\d]/g,'')">
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;页&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group" id="enterA">
+                <!--<button type="button" class="btn btn-primary" onclick="getPage('')">确定</button>-->
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;共<span id="ajaxMaxPageA"></span>页，<span id="ajaxCountA"></span>条记录&nbsp;&nbsp;</h5>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        var ajaxPageA = 1;
+        //页码初始化
+        function pageAinit(funcName, page, maxPage, count) {
+            ajaxPageA = page;
+            //首页-当页码为1或总页数为1时不可点击
+            var head = "<li><a href=\"javascript:"+ funcName +"(1)\">首页</a></li>";
+            if (page == 1 || maxPage == 1) {
+                head = "<li class=\"disabled\"><a href=\"javascript:void(0);\">首页</a></li>";
+            }
+
+            //上一页-当页码为1时不可点击
+            var before = "";
+            if (page == 1 || maxPage == 1) {
+                before = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&laquo;</a></li>";
+            } else {
+                before = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageA-1) +")\">&laquo;</a></li>";
+            }
+
+            /** -------- 页码显示 ---------- */
+            var pagedetail = "";
+
+            //5页以内显示全部页面
+            if (maxPage <= 5 ) {
+                pagedetail += pagetool(funcName, 1, maxPage, page);
+            }
+
+            //大于5页 只显示左右两页，其他用...代替
+            if (maxPage > 5) {
+                if (page >3) {
+                    pagedetail = "<li><span class=\"dot\">...</span></li>"
+                }
+
+                if (page <= 3) {
+                    pagedetail += pagetool(funcName, 1, 5, page);
+                } else if (page > 3 && maxPage - page >= 2) {
+                    pagedetail += pagetool(funcName, page - 2, page -1 + 3, page);
+                } else {
+                    pagedetail += pagetool(funcName, maxPage - 4, maxPage, page);
+                }
+
+                if (maxPage - page >2) {
+                    pagedetail += "<li><span class=\"dot\">...</span></li>"
+                }
+            }
+
+            //下一页-当页码为最大页码时不可点击
+            var next = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageA+1) +")\">&raquo;</a></li>";
+            if (page == maxPage) {
+                next = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&raquo;</a></li>";
+            }
+
+            //末页-当页码为1或当前页数为最大时不可点击
+            var end = "<li><a href=\"javascript:"+ funcName +"("+ maxPage +")\">末页</a></li>";
+            if (maxPage == 1 || page == maxPage) {
+                end = "<li class=\"disabled\"><a href=\"javascript:void(0);\">末页</a></li>";
+            }
+
+            //设置页脚的最大页码和条数
+            setfootA(funcName, maxPage, count);
+
+            return head + before + pagedetail + next + end;
+        }
+
+        //设置页脚的最大页码和条数
+        function setfootA(funcName, maxPage, count) {
+            var enter = "<button type=\"button\" class=\"btn-sm btn-primary\" onclick=\""+ funcName +"('')\">确定</button>";
+            $("#enterA").html(enter);
+            $("#ajaxMaxPageA").text(maxPage);
+            $("#ajaxCountA").text(count);
+        }
+
+        /** 页码打印工具
+         *
+         * funcName 跳转方法名称
+         * startPage  开始页码
+         * endPage  结束页码
+         * pageNum  当前页码
+         *
+         * @return 返回页码代码
+         */
+        function pagetool(funcName, startPage, endPage, pageNum) {
+            var pagedetail = "";
+            if (startPage > endPage) {
+                return "";
+            }
+            for (var i = startPage; i <= endPage; i++) {
+                if (i == pageNum) {
+                    pagedetail += "<li class=\"active\"><a href=\"javascript:"+ funcName +"(" + i + ")\">" + i + "</a></li>";
+                } else {
+                    pagedetail += "<li><a href=\"javascript:"+ funcName +"(" + i + ")\">" + i + "</a></li>";
+                }
+            }
+            return pagedetail;
+        }
+    </script>
+</div>
+<!-- 翻页组件A-ajax end -->
+
+<!-- 翻页组件B-ajax start -->
+<div th:fragment="paginater_B" class="panel panel-footer" style="width:96%; position:absolute; bottom:0px;padding-bottom:3px; margin-bottom:0%">
+    <div class="btn-group" style="padding-top: 0px; padding-bottom: 4px">
+        <select id="pageSize_B" name="pageSize_B" class="form-control" value="10">
+            <option value="10">10</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+        </select>
+    </div>
+    <div class="btn-group">
+        <div class="btn-group">
+            <ul id="pagefootB" class="pagination" style="margin-bottom: 0px; margin-top: 0px;"/>
+        </div>
+        <div class="btn-group">
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;第&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group input-group-sm">
+                <input id="page_B" name="page_B" type="text" class="form-control" style="width: 40px;" oninput = "value=value.replace(/[^\d]/g,'')">
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;页&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group" id="enterB">
+                <!--<button type="button" class="btn btn-primary" onclick="getPage('')">确定</button>-->
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;共<span id="ajaxMaxPageB"></span>页，<span id="ajaxCountB"></span>条记录&nbsp;&nbsp;</h5>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        var ajaxPageB = 1;
+        //页码初始化
+        function pageBinit(funcName, page, maxPage, count) {
+            ajaxPageB = page;
+            //首页-当页码为1或总页数为1时不可点击
+            var head = "<li><a href=\"javascript:"+ funcName +"(1)\">首页</a></li>";
+            if (page == 1 || maxPage == 1) {
+                head = "<li class=\"disabled\"><a href=\"javascript:void(0);\">首页</a></li>";
+            }
+
+            //上一页-当页码为1时不可点击
+            var before = "";
+            if (page == 1 || maxPage == 1) {
+                before = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&laquo;</a></li>";
+            } else {
+                before = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageB-1) +")\">&laquo;</a></li>";
+            }
+
+            /** -------- 页码显示 ---------- */
+            var pagedetail = "";
+
+            //5页以内显示全部页面
+            if (maxPage <= 5 ) {
+                pagedetail += pagetool(funcName, 1, maxPage, page);
+            }
+
+            //大于5页 只显示左右两页，其他用...代替
+            if (maxPage > 5) {
+                if (page >3) {
+                    pagedetail = "<li><span class=\"dot\">...</span></li>"
+                }
+
+                if (page <= 3) {
+                    pagedetail += pagetool(funcName, 1, 5, page);
+                } else if (page > 3 && maxPage - page >= 2) {
+                    pagedetail += pagetool(funcName, page - 2, page -1 + 3, page);
+                } else {
+                    pagedetail += pagetool(funcName, maxPage - 4, maxPage, page);
+                }
+
+                if (maxPage - page >2) {
+                    pagedetail += "<li><span class=\"dot\">...</span></li>"
+                }
+            }
+
+            //下一页-当页码为最大页码时不可点击
+            var next = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageB+1) +")\">&raquo;</a></li>";
+            if (page == maxPage) {
+                next = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&raquo;</a></li>";
+            }
+
+            //末页-当页码为1或当前页数为最大时不可点击
+            var end = "<li><a href=\"javascript:"+ funcName +"("+ maxPage +")\">末页</a></li>";
+            if (maxPage == 1 || page == maxPage) {
+                end = "<li class=\"disabled\"><a href=\"javascript:void(0);\">末页</a></li>";
+            }
+
+            //设置页脚的最大页码和条数
+            setfootB(funcName, maxPage, count);
+
+            return head + before + pagedetail + next + end;
+        }
+
+        //设置页脚的最大页码和条数
+        function setfootB(funcName, maxPage, count) {
+            var enter = "<button type=\"button\" class=\"btn-sm btn-primary\" onclick=\""+ funcName +"('')\">确定</button>";
+            $("#enterB").html(enter);
+            $("#ajaxMaxPageB").text(maxPage);
+            $("#ajaxCountB").text(count);
+        }
+    </script>
+</div>
+<!-- 翻页组件B-ajax end -->
+
+<!-- 翻页组件C-ajax start -->
+<div th:fragment="paginater_C" class="panel panel-footer" style="width:96%; position:absolute; bottom:0px;padding-bottom:3px; margin-bottom:0%">
+    <div class="btn-group">
+        <div class="btn-group">
+            <ul id="pagefootC" class="pagination" style="margin-bottom: 0px; margin-top: 0px;"/>
+        </div>
+        <div class="btn-group">
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;第&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group input-group-sm">
+                <input id="page_C" name="page_C" type="text" class="form-control" style="width: 40px;" oninput = "value=value.replace(/[^\d]/g,'')">
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;页&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group" id="enterC">
+                <!--<button type="button" class="btn btn-primary" onclick="getPage('')">确定</button>-->
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;共<span id="ajaxMaxPageC"></span>页，<span id="ajaxCountC"></span>条记录&nbsp;&nbsp;</h5>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        var ajaxPageC = 1;
+        //页码初始化
+        function pageCinit(funcName, page, maxPage, count) {
+            ajaxPageC = page;
+            //首页-当页码为1或总页数为1时不可点击
+            var head = "<li><a href=\"javascript:"+ funcName +"(1)\">首页</a></li>";
+            if (page == 1 || maxPage == 1) {
+                head = "<li class=\"disabled\"><a href=\"javascript:void(0);\">首页</a></li>";
+            }
+
+            //上一页-当页码为1时不可点击
+            var before = "";
+            if (page == 1 || maxPage == 1) {
+                before = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&laquo;</a></li>";
+            } else {
+                before = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageC-1) +")\">&laquo;</a></li>";
+            }
+
+            /** -------- 页码显示 ---------- */
+            var pagedetail = "";
+
+            //5页以内显示全部页面
+            if (maxPage <= 5 ) {
+                pagedetail += pagetool(funcName, 1, maxPage, page);
+            }
+
+            //大于5页 只显示左右两页，其他用...代替
+            if (maxPage > 5) {
+                if (page >3) {
+                    pagedetail = "<li><span class=\"dot\">...</span></li>"
+                }
+
+                if (page <= 3) {
+                    pagedetail += pagetool(funcName, 1, 5, page);
+                } else if (page > 3 && maxPage - page >= 2) {
+                    pagedetail += pagetool(funcName, page - 2, page -1 + 3, page);
+                } else {
+                    pagedetail += pagetool(funcName, maxPage - 4, maxPage, page);
+                }
+
+                if (maxPage - page >2) {
+                    pagedetail += "<li><span class=\"dot\">...</span></li>"
+                }
+            }
+
+            //下一页-当页码为最大页码时不可点击
+            var next = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageC+1) +")\">&raquo;</a></li>";
+            if (page == maxPage) {
+                next = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&raquo;</a></li>";
+            }
+
+            //末页-当页码为1或当前页数为最大时不可点击
+            var end = "<li><a href=\"javascript:"+ funcName +"("+ maxPage +")\">末页</a></li>";
+            if (maxPage == 1 || page == maxPage) {
+                end = "<li class=\"disabled\"><a href=\"javascript:void(0);\">末页</a></li>";
+            }
+
+            //设置页脚的最大页码和条数
+            setfootC(funcName, maxPage, count);
+
+            return head + before + pagedetail + next + end;
+        }
+
+        //设置页脚的最大页码和条数
+        function setfootC(funcName, maxPage, count) {
+            var enter = "<button type=\"button\" class=\"btn-sm btn-primary\" onclick=\""+ funcName +"('')\">确定</button>";
+            $("#enterC").html(enter);
+            $("#ajaxMaxPageC").text(maxPage);
+            $("#ajaxCountC").text(count);
+        }
+    </script>
+</div>
+<!-- 翻页组件C-ajax end -->
+
+<!-- 翻页组件D-ajax start -->
+<div th:fragment="paginater_D" class="panel panel-footer" style="width:96%; position:absolute; bottom:0px;padding-bottom:3px; margin-bottom:0%">
+    <div class="btn-group">
+        <div class="btn-group">
+            <ul id="pagefootD" class="pagination" style="margin-bottom: 0px; margin-top: 0px;"/>
+        </div>
+        <div class="btn-group">
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;第&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group input-group-sm">
+                <input id="page_D" name="page_D" type="text" class="form-control" style="width: 40px;" oninput = "value=value.replace(/[^\d]/g,'')">
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;页&nbsp;&nbsp;</h5>
+            </div>
+            <div class="btn-group" id="enterD">
+                <!--<button type="button" class="btn btn-primary" onclick="getPage('')">确定</button>-->
+            </div>
+            <div class="btn-group">
+                <h5>&nbsp;&nbsp;共<span id="ajaxMaxPageD"></span>页，<span id="ajaxCountD"></span>条记录&nbsp;&nbsp;</h5>
+            </div>
+        </div>
+    </div>
+    <script th:inline="javascript">
+        var ajaxPageD = 1;
+        //页码初始化
+        function pageDinit(funcName, page, maxPage, count) {
+            ajaxPageD = page;
+            //首页-当页码为1或总页数为1时不可点击
+            var head = "<li><a href=\"javascript:"+ funcName +"(1)\">首页</a></li>";
+            if (page == 1 || maxPage == 1) {
+                head = "<li class=\"disabled\"><a href=\"javascript:void(0);\">首页</a></li>";
+            }
+
+            //上一页-当页码为1时不可点击
+            var before = "";
+            if (page == 1 || maxPage == 1) {
+                before = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&laquo;</a></li>";
+            } else {
+                before = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageD-1) +")\">&laquo;</a></li>";
+            }
+
+            /** -------- 页码显示 ---------- */
+            var pagedetail = "";
+
+            //5页以内显示全部页面
+            if (maxPage <= 5 ) {
+                pagedetail += pagetool(funcName, 1, maxPage, page);
+            }
+
+            //大于5页 只显示左右两页，其他用...代替
+            if (maxPage > 5) {
+                if (page >3) {
+                    pagedetail = "<li><span class=\"dot\">...</span></li>"
+                }
+
+                if (page <= 3) {
+                    pagedetail += pagetool(funcName, 1, 5, page);
+                } else if (page > 3 && maxPage - page >= 2) {
+                    pagedetail += pagetool(funcName, page - 2, page -1 + 3, page);
+                } else {
+                    pagedetail += pagetool(funcName, maxPage - 4, maxPage, page);
+                }
+
+                if (maxPage - page >2) {
+                    pagedetail += "<li><span class=\"dot\">...</span></li>"
+                }
+            }
+
+            //下一页-当页码为最大页码时不可点击
+            var next = "<li><a href=\"javascript:"+ funcName +"("+ (ajaxPageD+1) +")\">&raquo;</a></li>";
+            if (page == maxPage) {
+                next = "<li class=\"disabled\"><a href=\"javascript:void(0);\">&raquo;</a></li>";
+            }
+
+            //末页-当页码为1或当前页数为最大时不可点击
+            var end = "<li><a href=\"javascript:"+ funcName +"("+ maxPage +")\">末页</a></li>";
+            if (maxPage == 1 || page == maxPage) {
+                end = "<li class=\"disabled\"><a href=\"javascript:void(0);\">末页</a></li>";
+            }
+
+            //设置页脚的最大页码和条数
+            setfootD(funcName, maxPage, count);
+
+            return head + before + pagedetail + next + end;
+        }
+
+        //设置页脚的最大页码和条数
+        function setfootD(funcName, maxPage, count) {
+            var enter = "<button type=\"button\" class=\"btn-sm btn-primary\" onclick=\""+ funcName +"('')\">确定</button>";
+            $("#enterD").html(enter);
+            $("#ajaxMaxPageD").text(maxPage);
+            $("#ajaxCountD").text(count);
+        }
+    </script>
+</div>
+<!-- 翻页组件D-ajax end -->
+
+<!-- 菜单编辑组件 start -->
+<div th:fragment="common_menu_editer" class="panel panel-footer" style="text-align:center; width:90%; position:absolute; bottom:0px;padding-bottom:5px; margin-bottom:0">
+    <button type="button" style="width: 80%; " class="btn btn-primary" onclick="editMenu()">
+        编辑菜单
+    </button>
+
+    <!-- 菜单编辑弹窗 -->
+    <div class="modal fade" id="menuDialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog" style="width:1000px;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="machineModal">菜单编辑</h4>
+                </div>
+                <form class="form-horizontal" id="menuEdit" name="menuEdit" role="form" method="post"
+                      enctype="multipart/form-data">
+                    <div class="modal-body col-md-12">
+                        <!-- 第一列 -->
+                        <div class="col-md-6">
+
+                        </div>
+                        <!--第二列-->
+                        <div class="col-md-6">
+
+                        </div>
+                    </div>
+                </form>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="saveinfo()">保存</button>
+                    <button type="button" class="btn btn-default" onclick="closeinfo()">返回</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 菜单编辑组件 end -->
+</body>
+</html>

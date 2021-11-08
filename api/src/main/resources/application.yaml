@@ -1,0 +1,66 @@
+# web容器配置
+server:
+  port: 9090
+  servlet:
+    context-path: /springboot-start
+    session:
+      timeout: 3600s
+
+  # 线程参数配置
+  tomcat:
+    ## 等待队列长度，默认100。
+    accept-count: 10000
+    ## 最大工作线程数，默认200。（4核8g内存，线程数经验值800，操作系统做线程之间的切换调度是有系统开销的，所以不是越多越好。）
+    max-threads: 800
+    ## 最小工作空闲线程数，默认10。（适当增大一些，以便应对突然增长的访问量）
+    min-spare-threads: 20
+    ## http请求头信息的最大长度，超过此长度的部分不予处理。默认8k
+    max-http-header-size: 10240
+
+
+# 系统日志配置
+logging:
+  file: logs/system.log
+
+
+spring:
+  application:
+    name: springboot-start
+  # 数据库配置
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: postgres
+    url: jdbc:postgresql://127.0.0.1:5432/test
+
+  # 页面资源配置
+  mvc:
+    static-path-pattern: /static/**  # 访问static下的静态资源，如images、js、css等，前缀必须加static/
+    favicon:
+      enabled: false
+  resources:
+    static-locations: classpath:/static/
+  thymeleaf:
+    prefix:
+      classpath: /templates/  # 访问template下的html文件需要配置模板，映射
+    suffix: .html
+    cache: false # 开发时关闭缓存,不然没法看到实时页面
+
+  # 页签图标自定义所用缓存参数
+  groovy:
+    template:
+      cache: false
+
+  # 上传文件大小设置
+  servlet:
+    multipart:
+      max-file-size: 2048MB
+      max-request-size: 2060MB
+
+
+# mapper文件配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+

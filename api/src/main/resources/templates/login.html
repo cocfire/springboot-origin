@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-cn" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="commons::common_header">
+</head>
+<body>
+<img id="bg" th:src="@{/static/images/bg.jpg}" style="width:100%; height:100%; right:0; bottom:0; position:absolute; top:0; left:0; z-index:-1"/>
+<div id="version" style="position:absolute; width:150px; right:0;">
+    version:<span id="sys_version"></span>
+    <br/>
+    build-<span id="sys_update"></span>
+</div>
+<div id="login" style="overflow: visible; left: 0; position: absolute; top: 275px;"><!--suppress ALL-->
+    <div style="width:420px; height:370px; background-image:url('/DMIL/static/images/login_modal.png'); background-repeat:no-repeat; margin-left:70%; padding-top:5px; padding-left:10px;"><!--suppress ALL-->
+        <div style="width:420px; height:52px; background-image:url('/DMIL/static/images/login_title.png'); background-repeat:no-repeat; padding-top:0px;">
+            <!-- 账号密码登录 -->
+            <div id="accountlogin" style="width:400px; height:50px; padding-left:0px; padding-top:70px;">
+                <div style="width:360px; height:50px; padding-right:0px;"><!--suppress ALL-->
+                    <span class="input-group-addon" style="height:30px; margin-left:20px; margin-top:15px; float:left; background-image: url('/DMIL/static/images/login_username.png'); background-repeat:no-repeat; :middle; display:inline; border:none; background-color: transparent;"></span>
+                    <label for="account" class="sr-only">帐号</label>
+                    <input type="phone" id="account" name="account" class="form-control" placeholder="手机号/用户名" maxlength="50"
+                           Style="height:50px; margin-top:15px; margin-left:65px; padding:6px 12px; top:0px; position:relative; width:80%;"
+                           required="" autofocus="">
+                </div>
+                <div style="width:360px; height:50px; padding-right:0px;"><!--suppress ALL-->
+                    <span class="input-group-addon" style="height:30px; margin-left:20px; margin-top:15px; float:left; background-image: url('/DMIL/static/images/login_pwd.png'); background-repeat:no-repeat; :middle; display:inline; border:none; background-color: transparent;"></span>
+                    <label for="password" class="sr-only">输入密码</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="密码" maxlength="50"
+                           Style="height:50px; margin-top:15px; margin-left:65px; padding:6px 12px; top:0px; position:relative; width:80%;"
+                           required="" autofocus="">
+                </div><!--suppress ALL-->
+                <button id="loginbtn" class="btn btn-lg" type="button" onclick="checklogin()"
+                        style="width:90%; margin-left:20px; margin-top:15px; color:white; font-family: 微软雅黑; font-size:20px; background-image:url('/DMIL/static/images/login_submit.png'); background-repeat:no-repeat;">
+                    登录
+                </button>
+                <div>
+                    <h5 style="width:360px; margin-top:20px; padding-left:40px; font-size:12px; color:#808080">
+                        温馨提示：建议使用谷歌、火狐、IE（9.0以上）浏览器！</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:src="@{/static/js/common.js}"></script>
+<script type="text/javascript">
+    /** ---- 加载版本信息 ----*/
+    $(document).ready(function () {
+        getSysVersion();
+    });
+    var login = document.getElementById("login");
+    var bgImg = document.getElementById("bg");
+    var version = document.getElementById("version");
+    login.style.position = "absolute";
+
+    window.onload = view; 	// 页面初始化时固定其位置
+    window.onscroll = view;// 当文档位置发生变化时重新固定其位置
+    window.onresize = view;//页面重置时固定其位置
+    function view() {      // 元素位置固定函数
+        //登录
+        login.style.right = parseInt(document.documentElement.clientWidth) * 0.08 + "px";
+        login.style.top = parseInt(document.documentElement.clientHeight) * 0.3 + "px";
+        //背景
+        bgImg.style.width = parseInt(document.documentElement.clientWidth) + "px";
+        bgImg.style.height = parseInt(document.documentElement.clientHeight) + "px";
+        //版本号
+        version.style.right = "0px";
+        version.style.top = parseInt(document.documentElement.clientHeight) * 0.015 + "px";
+    }
+
+    //回车登录功能
+    document.onkeydown = function(e) {
+        var e = e || event;
+        if(e.keyCode == 13) {
+            checklogin();
+        }
+    }
+
+    //验证并登录
+    function checklogin() {
+        var account = $("#account").val();
+        var password = $("#password").val();
+        var phone = "";
+        if (account.length == 0) {
+            alert("请输入账号！");
+            $("#account").focus();
+            return;
+        }
+        if (password.length == 0) {
+            alert("请输入密码！");
+            $("#password").focus();
+            return;
+        }
+        if (isNum(account)) {
+            phone = account;
+        }
+        $.ajax({
+            type: "POST"
+            , url: "/DMIL/dologin"
+            , data: {
+                phone: phone,
+                account: account,
+                password: password
+            }
+            , contentType: "application/x-www-form-urlencoded;charset=utf-8;"
+            , dataType: "json"
+            , cache: false
+            , success: function (data) {
+                if (data.obj1 == 'success') {
+                    console.log("登陆成功");
+                    //登陆成功后根据权限打开页面
+                    switch (data.pageOrder) {
+                        case 1:
+                            location.href = "/DMIL/device/list";
+                            break;
+                        case 2:
+                            location.href = "/DMIL/software/list";
+                            break;
+                        case 3:
+                            location.href = "/DMIL/file/list";
+                            break;
+                        case 5:
+                            location.href = "/DMIL/syslog/list";
+                            break;
+                        case 6:
+                            location.href = "/DMIL/otherdevice/list";
+                            break;
+                        case 7:
+                            location.href = "/DMIL/param/list";
+                            break;
+                        case 8:
+                            location.href = "/DMIL/config/list";
+                            break;
+                        default:
+                            location.reload();
+                    }
+                } else {
+                    alert(data.obj1);
+                }
+            }
+            , error: function (XMLHttpRequest, textStatus, errorThrown) {
+                //alert(XMLHttpRequest.status + textStatus);
+            }
+        });
+    }
+</script>
+</body>
+</html>
