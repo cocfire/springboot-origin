@@ -1,4 +1,4 @@
-package com.springboot.start.common;
+package com.springboot.start.utils.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

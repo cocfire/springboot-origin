@@ -1,6 +1,6 @@
-package com.springboot.start.mapper;
+package com.springboot.start.data.mapper;
 
-import com.springboot.start.entity.Helloworld;
+import com.springboot.start.data.entity.Helloworld;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 

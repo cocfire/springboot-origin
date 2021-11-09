@@ -1,4 +1,4 @@
-package com.springboot.start;
+package com.springboot.start.utils;
 
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -9,6 +9,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @ComponentScan
 @Configuration
-public class CoreConfiguration {
+public class UtilsConfiguration {
 
 }

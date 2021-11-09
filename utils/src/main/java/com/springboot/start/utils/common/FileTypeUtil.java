@@ -1,4 +1,4 @@
-package com.springboot.start.common;
+package com.springboot.start.utils.common;
 
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.web.multipart.MultipartFile;

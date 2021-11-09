@@ -1,6 +1,9 @@
-package com.springboot.start;
+package com.springboot.start.api;
 
 
+import com.springboot.start.core.CoreConfiguration;
+import com.springboot.start.data.DataConfiguration;
+import com.springboot.start.utils.UtilsConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Import;

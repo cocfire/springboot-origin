@@ -1,6 +1,6 @@
-package com.springboot.start.sqlutils;
+package com.springboot.start.utils.sqlutils;
 
-import com.springboot.start.common.ConvUtil;
+import com.springboot.start.utils.common.ConvUtil;
 
 import java.util.Map;
 

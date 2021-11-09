@@ -1,4 +1,4 @@
-package com.springboot.start.config;
+package com.springboot.start.api.config;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;

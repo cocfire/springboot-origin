@@ -1,6 +1,6 @@
-package com.springboot.start.controller.test;
+package com.springboot.start.api.controller.test;
 
-import com.springboot.start.service.HelloService;
+import com.springboot.start.core.service.HelloService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

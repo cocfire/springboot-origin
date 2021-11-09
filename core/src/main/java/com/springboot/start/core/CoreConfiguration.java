@@ -1,6 +1,5 @@
-package com.springboot.start;
+package com.springboot.start.core;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
@@ -10,7 +9,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @ComponentScan
 @Configuration
-@MapperScan("com.springboot.start.data.mapper")
-public class DataConfiguration {
+public class CoreConfiguration {
 
 }
